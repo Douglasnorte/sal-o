@@ -1,6 +1,6 @@
-# Salão — Agenda
+# Amanda Cruz — Agenda
 
-Sistema de agenda para salão de beleza feminino: calendário multi-profissional, cadastro de
+Sistema de agenda do salão Amanda Cruz: calendário multi-profissional, cadastro de
 clientes e serviços, controle de status de atendimento e módulo financeiro (faturamento,
 comissões e formas de pagamento).
 

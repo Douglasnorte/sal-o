@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Salão — Agenda",
-  description: "Sistema de agenda para salão de beleza",
+  title: "Amanda Cruz — Agenda",
+  description: "Sistema de agenda do salão Amanda Cruz",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

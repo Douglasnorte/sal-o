@@ -26,10 +26,10 @@ export default function Sidebar({ userName }: { userName: string }) {
   return (
     <aside className="flex h-full w-60 flex-col border-r border-border bg-surface">
       <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-lg font-bold text-white">
-          S
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
+          AC
         </div>
-        <span className="text-lg font-semibold text-foreground">Salão</span>
+        <span className="text-lg font-semibold text-foreground">Amanda Cruz</span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
