@@ -4,5 +4,7 @@ import { authConfig } from "@/lib/auth.config";
 export default NextAuth(authConfig).auth;
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // All /api routes are excluded: /api/auth needs no gate, and
+  // /api/webhooks/* is called directly by external services (no session).
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

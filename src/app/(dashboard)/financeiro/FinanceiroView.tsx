@@ -34,7 +34,7 @@ export default function FinanceiroView({
   const router = useRouter();
 
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-  const totalAppointments = payments.length;
+  const totalAppointments = new Set(payments.map((p) => p.appointmentId)).size;
   const averageTicket = totalAppointments > 0 ? totalRevenue / totalAppointments : 0;
 
   const byProfessional = useMemo(() => {
@@ -46,7 +46,7 @@ export default function FinanceiroView({
         color: string;
         commissionPercent: number;
         revenue: number;
-        count: number;
+        appointmentIds: Set<string>;
       }
     >();
     for (const payment of payments) {
@@ -57,13 +57,15 @@ export default function FinanceiroView({
         color: professional.color,
         commissionPercent: professional.commissionPercent,
         revenue: 0,
-        count: 0,
+        appointmentIds: new Set<string>(),
       };
       entry.revenue += payment.amount;
-      entry.count += 1;
+      entry.appointmentIds.add(payment.appointmentId);
       map.set(professional.id, entry);
     }
-    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
+    return Array.from(map.values())
+      .map((entry) => ({ ...entry, count: entry.appointmentIds.size }))
+      .sort((a, b) => b.revenue - a.revenue);
   }, [payments]);
 
   const byMethod = useMemo(() => {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { formatCurrency, formatDateKey, formatLongDate, parseDateKey } from "@/lib/format";
-import { getAvailableSlots, createPublicAppointment } from "@/lib/actions/booking";
+import { getAvailableSlots, startBookingWithDeposit } from "@/lib/actions/booking";
+import { DEPOSIT_PERCENT } from "@/lib/constants";
 import type { ProfessionalModel, ServiceModel } from "@/types/domain";
 
-type Step = "service" | "professional" | "date" | "time" | "details" | "done";
+type Step = "service" | "professional" | "date" | "time" | "details";
 
 const MAX_DAYS_AHEAD = 30;
 
@@ -56,7 +57,7 @@ export default function BookingWizard({
     if (!professionalId || !serviceId || !time) return;
     setSubmitting(true);
     setError(null);
-    const result = await createPublicAppointment({
+    const result = await startBookingWithDeposit({
       professionalId,
       serviceId,
       dateKey,
@@ -64,12 +65,12 @@ export default function BookingWizard({
       clientName: name,
       clientPhone: phone,
     });
-    setSubmitting(false);
     if (!result.success) {
+      setSubmitting(false);
       setError(result.error);
       return;
     }
-    setStep("done");
+    window.location.href = result.checkoutUrl;
   }
 
   function back() {
@@ -91,7 +92,7 @@ export default function BookingWizard({
       </div>
 
       <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-sm">
-        {step !== "service" && step !== "done" && (
+        {step !== "service" && (
           <button
             onClick={back}
             className="mb-4 flex items-center gap-1 text-sm text-muted hover:text-foreground"
@@ -224,6 +225,13 @@ export default function BookingWizard({
                 {formatLongDate(parseDateKey(dateKey))} às {time}
               </p>
             </div>
+            {service && (
+              <p className="mb-4 text-sm text-foreground">
+                Para confirmar, é necessário pagar um sinal de{" "}
+                <strong>{formatCurrency((service.price * DEPOSIT_PERCENT) / 100)}</strong> (
+                {DEPOSIT_PERCENT}% do valor) via Pix ou cartão. O restante é pago no salão.
+              </p>
+            )}
             <div className="flex flex-col gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Nome</label>
@@ -251,23 +259,9 @@ export default function BookingWizard({
                 disabled={submitting || !name.trim() || !phone.trim()}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-60"
               >
-                {submitting ? "Confirmando..." : "Confirmar agendamento"}
+                {submitting ? "Redirecionando..." : "Ir para pagamento do sinal"}
               </button>
             </div>
-          </div>
-        )}
-
-        {step === "done" && (
-          <div className="flex flex-col items-center py-4 text-center">
-            <CheckCircle2 size={48} className="mb-3 text-green-500" />
-            <h2 className="mb-1 text-lg font-semibold text-foreground">
-              Agendamento confirmado!
-            </h2>
-            <p className="text-sm text-muted">
-              {service?.name} com {professional?.name}
-              <br />
-              {formatLongDate(parseDateKey(dateKey))} às {time}
-            </p>
           </div>
         )}
       </div>

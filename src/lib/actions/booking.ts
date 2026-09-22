@@ -1,9 +1,29 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { parseDateKey } from "@/lib/format";
-import { SLOT_MINUTES } from "@/lib/constants";
+import { DEPOSIT_PERCENT, PENDING_PAYMENT_HOLD_MINUTES, SLOT_MINUTES } from "@/lib/constants";
+import { createDepositPreference } from "@/lib/mercadopago";
+import type { AppointmentStatus } from "@/generated/prisma/enums";
+
+const NON_BLOCKING_STATUSES: AppointmentStatus[] = ["CANCELED", "NO_SHOW"];
+
+function pendingCutoff() {
+  return new Date(Date.now() - PENDING_PAYMENT_HOLD_MINUTES * 60000);
+}
+
+/** Appointments that currently occupy a slot: any active status, plus
+ * PENDING_PAYMENT ones that haven't expired yet. */
+function blockingAppointmentsWhere(professionalId: string) {
+  return {
+    professionalId,
+    OR: [
+      { status: { notIn: [...NON_BLOCKING_STATUSES, "PENDING_PAYMENT" as const] } },
+      { status: "PENDING_PAYMENT" as const, createdAt: { gte: pendingCutoff() } },
+    ],
+  };
+}
 
 export async function getAvailableSlots(
   professionalId: string,
@@ -29,8 +49,7 @@ export async function getAvailableSlots(
 
   const appointments = await prisma.appointment.findMany({
     where: {
-      professionalId,
-      status: { notIn: ["CANCELED", "NO_SHOW"] },
+      ...blockingAppointmentsWhere(professionalId),
       start: { gte: startOfDay, lte: endOfDay },
     },
     select: { start: true, end: true },
@@ -51,9 +70,7 @@ export async function getAvailableSlots(
 
     if (isToday && slotStart <= now) continue;
 
-    const overlaps = appointments.some(
-      (a) => slotStart < a.end && slotEnd > a.start,
-    );
+    const overlaps = appointments.some((a) => slotStart < a.end && slotEnd > a.start);
     if (overlaps) continue;
 
     const hh = String(Math.floor(m / 60)).padStart(2, "0");
@@ -73,7 +90,7 @@ export type PublicBookingInput = {
   clientPhone: string;
 };
 
-export async function createPublicAppointment(input: PublicBookingInput) {
+export async function startBookingWithDeposit(input: PublicBookingInput) {
   const name = input.clientName.trim();
   const phone = input.clientPhone.trim();
 
@@ -97,12 +114,7 @@ export async function createPublicAppointment(input: PublicBookingInput) {
   const end = new Date(start.getTime() + service.durationMinutes * 60000);
 
   const overlapping = await prisma.appointment.findFirst({
-    where: {
-      professionalId: input.professionalId,
-      status: { notIn: ["CANCELED", "NO_SHOW"] },
-      start: { lt: end },
-      end: { gt: start },
-    },
+    where: { ...blockingAppointmentsWhere(input.professionalId), start: { lt: end }, end: { gt: start } },
   });
   if (overlapping) {
     return {
@@ -116,17 +128,50 @@ export async function createPublicAppointment(input: PublicBookingInput) {
     client = await prisma.client.create({ data: { name, phone } });
   }
 
-  await prisma.appointment.create({
+  const appointment = await prisma.appointment.create({
     data: {
       clientId: client.id,
       professionalId: input.professionalId,
       serviceId: input.serviceId,
       start,
       end,
+      status: "PENDING_PAYMENT",
       price: service.price,
     },
   });
 
-  revalidatePath("/agenda");
-  return { success: true as const };
+  const depositAmount = Math.round(service.price * (DEPOSIT_PERCENT / 100) * 100) / 100;
+
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const origin = `https://${host}`;
+
+  try {
+    const preference = await createDepositPreference({
+      appointmentId: appointment.id,
+      title: `Sinal - ${service.name}`,
+      amount: depositAmount,
+      payerName: name,
+      successUrl: `${origin}/reservar/confirmando?appointmentId=${appointment.id}`,
+      pendingUrl: `${origin}/reservar/confirmando?appointmentId=${appointment.id}`,
+      failureUrl: `${origin}/reservar/confirmando?appointmentId=${appointment.id}`,
+      notificationUrl: `${origin}/api/webhooks/mercadopago`,
+    });
+
+    return { success: true as const, checkoutUrl: preference.initPoint };
+  } catch (err) {
+    await prisma.appointment.delete({ where: { id: appointment.id } });
+    return {
+      success: false as const,
+      error: err instanceof Error ? err.message : "Falha ao iniciar o pagamento.",
+    };
+  }
+}
+
+export async function getAppointmentStatus(appointmentId: string) {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { status: true },
+  });
+  return appointment?.status ?? null;
 }
