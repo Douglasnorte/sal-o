@@ -39,6 +39,9 @@ Acesse http://localhost:3000. Login de exemplo (definido em `SEED_ADMIN_EMAIL` /
   de pagamento) / cancelado / faltou.
 - **Financeiro**: faturamento por período, ticket médio, comissão por profissional,
   faturamento por forma de pagamento e por dia.
+- **Agendamento público** (`/reservar`): clientes escolhem serviço, profissional, data e
+  horário sem precisar de login, pagam um sinal (Pix/cartão, via Mercado Pago) e o
+  agendamento só é confirmado na agenda após a aprovação do pagamento.
 
 ## Deploy (Supabase + Vercel)
 
@@ -53,6 +56,17 @@ Acesse http://localhost:3000. Login de exemplo (definido em `SEED_ADMIN_EMAIL` /
    - `AUTH_SECRET` (gere um valor aleatório, ex: `openssl rand -base64 32`)
    - `NEXTAUTH_URL` (a URL pública do deploy, ex: `https://seu-app.vercel.app`)
 4. Deploy. O `postinstall` do projeto já roda `prisma generate` automaticamente no build.
+
+## Sinal via Mercado Pago
+
+1. Crie/acesse uma conta em [Mercado Pago Developers](https://www.mercadopago.com.br/developers)
+   e crie uma aplicação.
+2. Em **Suas integrações → (sua aplicação) → Credenciais de produção**, copie o **Access Token**.
+3. Adicione `MERCADOPAGO_ACCESS_TOKEN` nas variáveis de ambiente (local e na Vercel — marque
+   Production e Preview).
+4. Não é preciso configurar o webhook manualmente no painel do Mercado Pago: a URL de
+   notificação (`/api/webhooks/mercadopago`) é enviada automaticamente a cada cobrança criada.
+5. O percentual do sinal é definido em `DEPOSIT_PERCENT` (`src/lib/constants.ts`), 30% por padrão.
 
 ## Estrutura
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { PENDING_PAYMENT_HOLD_MINUTES } from "@/lib/constants";
 import type { AppointmentStatus, PaymentMethod } from "@/generated/prisma/enums";
 
 export type AppointmentInput = {
@@ -18,13 +19,17 @@ async function hasOverlap(
   end: Date,
   excludeId?: string,
 ) {
+  const pendingCutoff = new Date(Date.now() - PENDING_PAYMENT_HOLD_MINUTES * 60000);
   const overlapping = await prisma.appointment.findFirst({
     where: {
       professionalId,
       id: excludeId ? { not: excludeId } : undefined,
-      status: { notIn: ["CANCELED", "NO_SHOW"] },
       start: { lt: end },
       end: { gt: start },
+      OR: [
+        { status: { notIn: ["CANCELED", "NO_SHOW", "PENDING_PAYMENT"] } },
+        { status: "PENDING_PAYMENT", createdAt: { gte: pendingCutoff } },
+      ],
     },
   });
   return !!overlapping;
@@ -115,10 +120,8 @@ export async function recordPayment(
   method: PaymentMethod,
 ) {
   await prisma.$transaction([
-    prisma.payment.upsert({
-      where: { appointmentId },
-      update: { amount, method },
-      create: { appointmentId, amount, method },
+    prisma.payment.create({
+      data: { appointmentId, amount, method },
     }),
     prisma.appointment.update({
       where: { id: appointmentId },

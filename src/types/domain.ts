@@ -17,7 +17,7 @@ export type AppointmentWithRelations = AppointmentModel & {
 };
 
 export type AppointmentWithPayment = AppointmentWithRelations & {
-  payment: PaymentModel | null;
+  payments: PaymentModel[];
 };
 
 export type {

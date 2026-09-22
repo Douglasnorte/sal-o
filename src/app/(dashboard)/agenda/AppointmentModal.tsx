@@ -75,7 +75,10 @@ export default function AppointmentModal({
   const [addingClient, setAddingClient] = useState(false);
 
   const [showPayment, setShowPayment] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState(appointment?.price ?? 0);
+  const totalPaid = appointment?.payments.reduce((sum, p) => sum + p.amount, 0) ?? 0;
+  const [paymentAmount, setPaymentAmount] = useState(
+    appointment ? Math.max(appointment.price - totalPaid, 0) : 0,
+  );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
 
   const selectedService = useMemo(
@@ -289,11 +292,18 @@ export default function AppointmentModal({
               Status atual: {STATUS_LABELS[appointment.status]}
             </p>
 
-            {appointment.payment && (
-              <p className="mb-3 text-xs text-muted">
-                Pago: {formatCurrency(appointment.payment.amount)} ·{" "}
-                {PAYMENT_METHOD_LABELS[appointment.payment.method]}
-              </p>
+            {appointment.payments.length > 0 && (
+              <div className="mb-3 text-xs text-muted">
+                {appointment.payments.map((p) => (
+                  <p key={p.id}>
+                    {p.isDeposit ? "Sinal" : "Pagamento"}: {formatCurrency(p.amount)} ·{" "}
+                    {PAYMENT_METHOD_LABELS[p.method]}
+                  </p>
+                ))}
+                <p className="font-medium text-foreground">
+                  Total pago: {formatCurrency(totalPaid)} de {formatCurrency(appointment.price)}
+                </p>
+              </div>
             )}
 
             <div className="flex flex-wrap gap-2">

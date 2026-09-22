@@ -25,7 +25,7 @@ export default async function AgendaPage({
     }),
     prisma.appointment.findMany({
       where: { start: { gte: startOfDay, lte: endOfDay } },
-      include: { client: true, service: true, payment: true },
+      include: { client: true, service: true, payments: true },
       orderBy: { start: "asc" },
     }),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
