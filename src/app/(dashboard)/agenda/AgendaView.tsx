@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Link2, Check } from "lucide-react";
 import {
   AGENDA_START_HOUR,
   AGENDA_END_HOUR,
@@ -61,6 +61,13 @@ export default function AgendaView({
   } | null>(null);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentWithPayment | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  function copyBookingLink() {
+    navigator.clipboard.writeText(`${window.location.origin}/reservar`);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }
 
   function goToDate(newDate: Date) {
     router.push(`/agenda?date=${formatDateKey(newDate)}`);
@@ -97,6 +104,13 @@ export default function AgendaView({
           <p className="text-sm text-muted">{formatLongDate(day)}</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={copyBookingLink}
+            className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft"
+          >
+            {linkCopied ? <Check size={16} className="text-green-600" /> : <Link2 size={16} />}
+            {linkCopied ? "Copiado!" : "Link de agendamento"}
+          </button>
           <button
             onClick={() => shiftDay(-1)}
             className="rounded-lg border border-border p-2 hover:bg-primary-soft"

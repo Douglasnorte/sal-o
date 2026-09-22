@@ -1,6 +1,9 @@
 import { auth } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 
+// Every page here reads live, per-request data behind auth — never prerender.
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {
