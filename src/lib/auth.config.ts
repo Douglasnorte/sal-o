@@ -9,7 +9,13 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
-      const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+      const { pathname } = request.nextUrl;
+      const isLoginPage = pathname.startsWith("/login");
+      const isPublicBookingPage = pathname.startsWith("/reservar");
+
+      if (isPublicBookingPage) {
+        return true;
+      }
 
       if (isLoginPage) {
         if (isLoggedIn) {
