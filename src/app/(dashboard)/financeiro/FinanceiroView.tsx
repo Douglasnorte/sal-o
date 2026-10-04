@@ -105,8 +105,8 @@ export default function FinanceiroView({
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="p-4 sm:p-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Financeiro</h1>
           <p className="text-sm text-muted">Faturamento e comissões por período</p>
@@ -116,14 +116,14 @@ export default function FinanceiroView({
             type="date"
             value={fromKey}
             onChange={(e) => applyRange(e.target.value, toKey)}
-            className="rounded-lg border border-border px-3 py-2"
+            className="min-w-0 flex-1 rounded-lg border border-border px-3 py-2 sm:flex-none"
           />
-          <span className="text-muted">até</span>
+          <span className="shrink-0 text-muted">até</span>
           <input
             type="date"
             value={toKey}
             onChange={(e) => applyRange(fromKey, e.target.value)}
-            className="rounded-lg border border-border px-3 py-2"
+            className="min-w-0 flex-1 rounded-lg border border-border px-3 py-2 sm:flex-none"
           />
         </div>
       </div>
@@ -191,7 +191,33 @@ export default function FinanceiroView({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      {/* Mobile: card list */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {byProfessional.map((p) => (
+          <div key={p.id} className="rounded-xl border border-border bg-surface p-4">
+            <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+              {p.name}
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-sm text-muted">
+              <span>{p.count} atendimento(s)</span>
+              <span className="text-right">{formatCurrency(p.revenue)}</span>
+              <span>Comissão {p.commissionPercent}%</span>
+              <span className="text-right font-medium text-foreground">
+                {formatCurrency((p.revenue * p.commissionPercent) / 100)}
+              </span>
+            </div>
+          </div>
+        ))}
+        {byProfessional.length === 0 && (
+          <p className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted">
+            Nenhum pagamento registrado no período.
+          </p>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface md:block">
         <table className="w-full text-sm">
           <thead className="bg-primary-soft/40 text-left text-xs uppercase text-muted">
             <tr>

@@ -98,22 +98,30 @@ export default function AgendaView({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-6 py-4">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Agenda</h1>
-          <p className="text-sm text-muted">{formatLongDate(day)}</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 border-b border-border bg-surface px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+        <div className="flex items-center justify-between gap-3 md:block">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Agenda</h1>
+            <p className="text-sm text-muted">{formatLongDate(day)}</p>
+          </div>
           <button
             onClick={copyBookingLink}
-            className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft md:hidden"
+          >
+            {linkCopied ? <Check size={16} className="text-green-600" /> : <Link2 size={16} />}
+          </button>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <button
+            onClick={copyBookingLink}
+            className="hidden shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft md:flex"
           >
             {linkCopied ? <Check size={16} className="text-green-600" /> : <Link2 size={16} />}
             {linkCopied ? "Copiado!" : "Link de agendamento"}
           </button>
           <button
             onClick={() => shiftDay(-1)}
-            className="rounded-lg border border-border p-2 hover:bg-primary-soft"
+            className="shrink-0 rounded-lg border border-border p-2 hover:bg-primary-soft"
             aria-label="Dia anterior"
           >
             <ChevronLeft size={18} />
@@ -122,18 +130,18 @@ export default function AgendaView({
             type="date"
             value={dateKey}
             onChange={(e) => goToDate(parseDateKey(e.target.value))}
-            className="rounded-lg border border-border px-3 py-2 text-sm"
+            className="min-w-0 flex-1 shrink rounded-lg border border-border px-3 py-2 text-sm md:flex-none"
           />
           <button
             onClick={() => shiftDay(1)}
-            className="rounded-lg border border-border p-2 hover:bg-primary-soft"
+            className="shrink-0 rounded-lg border border-border p-2 hover:bg-primary-soft"
             aria-label="Próximo dia"
           >
             <ChevronRight size={18} />
           </button>
           <button
             onClick={() => goToDate(new Date())}
-            className="rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft"
+            className="shrink-0 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-primary-soft"
           >
             Hoje
           </button>
@@ -165,7 +173,7 @@ export default function AgendaView({
             </div>
 
             {professionals.map((professional) => (
-              <div key={professional.id} className="w-64 shrink-0 border-l border-border">
+              <div key={professional.id} className="w-48 shrink-0 border-l border-border sm:w-64">
                 <div className="flex h-14 items-center gap-2 border-b border-border px-3">
                   <span
                     className="h-2.5 w-2.5 rounded-full"

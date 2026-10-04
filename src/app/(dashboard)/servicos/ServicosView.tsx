@@ -33,7 +33,7 @@ export default function ServicosView({ services }: { services: ServiceModel[] })
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Serviços</h1>
@@ -48,7 +48,54 @@ export default function ServicosView({ services }: { services: ServiceModel[] })
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      {/* Mobile: card list */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {services.map((service) => (
+          <div key={service.id} className="rounded-xl border border-border bg-surface p-4">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-foreground">{service.name}</p>
+                <p className="text-sm text-muted">
+                  {service.category ?? "Sem categoria"} · {service.durationMinutes} min
+                </p>
+                <p className="text-sm font-medium text-foreground">
+                  {formatCurrency(service.price)}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  onClick={() => setEditing(service)}
+                  className="rounded-lg p-1.5 text-muted hover:bg-primary-soft hover:text-primary"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(service)}
+                  className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggle(service)}
+              className={`rounded-full px-2 py-1 text-xs font-medium ${
+                service.active ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"
+              }`}
+            >
+              {service.active ? "Ativo" : "Inativo"}
+            </button>
+          </div>
+        ))}
+        {services.length === 0 && (
+          <p className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted">
+            Nenhum serviço cadastrado.
+          </p>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface md:block">
         <table className="w-full text-sm">
           <thead className="bg-primary-soft/40 text-left text-xs uppercase text-muted">
             <tr>
