@@ -36,7 +36,7 @@ export default function ClientesView({ clients }: { clients: ClientRow[] }) {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Clientes</h1>
@@ -61,7 +61,50 @@ export default function ClientesView({ clients }: { clients: ClientRow[] }) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      {/* Mobile: card list */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {filtered.map((client) => (
+          <div
+            key={client.id}
+            className="rounded-xl border border-border bg-surface p-4"
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-foreground">{client.name}</p>
+                <p className="text-sm text-muted">{client.phone ?? "Sem telefone"}</p>
+                {client.email && (
+                  <p className="truncate text-sm text-muted">{client.email}</p>
+                )}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  onClick={() => setEditing(client)}
+                  className="rounded-lg p-1.5 text-muted hover:bg-primary-soft hover:text-primary"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(client)}
+                  className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-muted">
+              {client._count.appointments} agendamento(s)
+            </p>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted">
+            Nenhuma cliente encontrada.
+          </p>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface md:block">
         <table className="w-full text-sm">
           <thead className="bg-primary-soft/40 text-left text-xs uppercase text-muted">
             <tr>
